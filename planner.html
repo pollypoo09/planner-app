@@ -1,0 +1,133 @@
+resume in story:
+
+
+
+
+
+     <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planner App</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fff0f5; color: #333; }
+header { background: #ffb6c1; color: white; padding: 15px; text-align: center; font-size: 1.5em; }
+nav { display: flex; justify-content: space-around; background: #ffc0cb; }
+nav button { flex: 1; padding: 10px; font-size: 1em; border: none; background: #ffc0cb; cursor: pointer; }
+nav button.active { background: #ff69b4; color: white; }
+.view { padding: 15px; display: none; }
+ul { list-style: none; padding: 0; }
+li { background: white; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+li.completed { text-decoration: line-through; opacity: 0.6; }
+input[type=text] { width: 70%; padding: 5px; }
+button.add { padding: 5px 10px; background: #ff69b4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+button.delete { background: #ff1493; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.calendar div { background: white; padding: 10px; border-radius: 5px; min-height: 60px; position: relative; }
+.calendar div span { position: absolute; top: 5px; left: 5px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>My Planner</header>
+<nav>
+<button id="dailyBtn" class="active">Daily</button>
+<button id="weeklyBtn">Weekly</button>
+<button id="monthlyBtn">Monthly</button>
+</nav>
+
+<div id="daily" class="view" style="display:block;">
+<h2>Today’s Tasks</h2>
+<input type="text" id="dailyInput" placeholder="Add a task">
+<button class="add" onclick="addTask('daily')">Add</button>
+<ul id="dailyList"></ul>
+</div>
+
+<div id="weekly" class="view">
+<h2>This Week’s Tasks</h2>
+<input type="text" id="weeklyInput" placeholder="Add a task">
+<button class="add" onclick="addTask('weekly')">Add</button>
+<ul id="weeklyList"></ul>
+</div>
+
+<div id="monthly" class="view">
+<h2>Monthly Calendar</h2>
+<div class="calendar" id="calendar"></div>
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('plannerTasks')) || { daily: [], weekly: [], monthly: {} };
+
+// --- Navigation ---
+document.getElementById('dailyBtn').onclick = () => showView('daily');
+document.getElementById('weeklyBtn').onclick = () => showView('weekly');
+document.getElementById('monthlyBtn').onclick = () => showView('monthly');
+
+function showView(view) {
+document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+document.getElementById(view).style.display = 'block';
+document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+document.getElementById(view + 'Btn').classList.add('active');
+}
+
+// --- Tasks ---
+function saveTasks() { localStorage.setItem('plannerTasks', JSON.stringify(tasks)); }
+
+function addTask(type) {
+let input = document.getElementById(type + 'Input');
+let value = input.value.trim();
+if (!value) return;
+if (type === 'monthly') return;
+tasks[type].push({ title: value, completed: false });
+input.value = '';
+saveTasks();
+renderTasks(type);
+}
+
+function toggleTask(type, index) {
+tasks[type][index].completed = !tasks[type][index].completed;
+saveTasks();
+renderTasks(type);
+}
+
+function deleteTask(type, index) {
+tasks[type].splice(index, 1);
+saveTasks();
+renderTasks(type);
+}
+
+function renderTasks(type) {
+let list = document.getElementById(type + 'List');
+list.innerHTML = '';
+tasks[type].forEach((task, i) => {
+let li = document.createElement('li');
+li.className = task.completed ? 'completed' : '';
+li.innerHTML = `<span onclick="toggleTask('${type}', ${i})">${task.title}</span>
+<button class="delete" onclick="deleteTask('${type}', ${i})">X</button>`;
+list.appendChild(li);
+});
+}
+
+function renderCalendar() {
+let calendar = document.getElementById('calendar');
+calendar.innerHTML = '';
+let now = new Date();
+let year = now.getFullYear();
+let month = now.getMonth();
+let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+for (let i = 1; i <= daysInMonth; i++) {
+let dayDiv = document.createElement('div');
+dayDiv.innerHTML = `<span>${i}</span>`;
+calendar.appendChild(dayDiv);
+}
+}
+
+renderTasks('daily');
+renderTasks('weekly');
+renderCalendar();
+</script>
+
+</body>
+</html>
